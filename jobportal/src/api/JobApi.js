@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://localhost:8080/jobportal/jobs";
+const API = "jobportalapplication-production.up.railway.app/jobportal/jobs";
 
 export const getAllJobs = async () => axios.get(API);
 

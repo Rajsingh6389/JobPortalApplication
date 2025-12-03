@@ -17,7 +17,8 @@ public class CorsConfig {
 
                 registry.addMapping("/**")
                         .allowedOrigins(
-                                "http://localhost:5173",     // Local dev
+                                "http://localhost:5173", 
+                                "jobportalapplication-production.up.railway.app",    // Local dev
                                 "https://job-portal-application-7yhh.vercel.app",
                                 "job-portal-application-7yhh-3d5nhqsvp-rajsingh6389s-projects.vercel.app"// Your Vercel frontend
                         )
