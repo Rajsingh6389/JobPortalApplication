@@ -39,7 +39,7 @@ public class UserService {
                 .name(req.getName())
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
-                .userType("USER")      // ⭐ Default role
+                .userType("USER")
                 .build();
 
         User saved = repo.save(user);

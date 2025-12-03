@@ -4,6 +4,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
+
 function Jobcard({ data }) {
   const isLoggedIn = useSelector((state) => state.auth.token !== null);
   const navigate = useNavigate();

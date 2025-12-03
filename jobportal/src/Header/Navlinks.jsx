@@ -7,7 +7,8 @@ function Navlinks() {
         { name: "Find Talent", url: "/find-talent" },
         { name: "Upload Job", url: "/upload-job" },
         {name:"view Applications", url:"/applications"},
-        { name: "About Us", url: "/about" }
+        { name: "About Us", url: "/about" },
+        {name:"ai resume",url:"/resume-generator"}
     ];
     const location=useLocation();
     return (

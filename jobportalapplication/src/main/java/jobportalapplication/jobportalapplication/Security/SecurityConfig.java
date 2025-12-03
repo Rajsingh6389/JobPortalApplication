@@ -38,6 +38,9 @@ public class SecurityConfig {
 
                         // Public APIs
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/all").permitAll()
+                        .requestMatchers("/api/resume/**").permitAll()
+                        .requestMatchers("/api/payment/**").permitAll()
+
 
                         // Anyone can view & apply jobs
                         .requestMatchers("/jobportal/jobs/apply").permitAll()
