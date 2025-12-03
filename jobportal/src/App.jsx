@@ -18,10 +18,10 @@ import Unauthorized from './Pages/Unauthorized';
 import AdminUploadJob from './Pages/AdminUploadJob';
 import ProtectedAdminRoute from './LandingPage/ProtectedAdminRoute';
 import AdminApplications from './Pages/AdminApplications';
-import AboutUs from './Pages/Aboutus';
 import AdminUserProfile from './Pages/AdminUserProfile';
 import VoiceAgent from './Pages/VoiceAgent';
 import ResumeGenerator from './Pages/ResumeGenerator';
+import AboutUs from './Pages/AboutUs';
 
 function App() {
   const theme = createTheme({
