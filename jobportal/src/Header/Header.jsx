@@ -13,10 +13,20 @@ function Header() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false); // MOBILE NAV STATE
+  const [animState, setAnimState] = useState("closed"); // open | closing
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
+  };
+
+  // Smooth closing animation
+  const closeMenu = () => {
+    setAnimState("closing");
+    setTimeout(() => {
+      setOpen(false);
+      setAnimState("closed");
+    }, 250); // matches slide-up animation speed
   };
 
   return (
@@ -91,7 +101,10 @@ function Header() {
       {/* MOBILE MENU BUTTON */}
       <button
         className="lg:hidden sm:hidden flex text-white"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (open) closeMenu();
+          else setOpen(true);
+        }}
       >
         {open ? <IconX size={30} /> : <IconMenu2 size={30} />}
       </button>
@@ -99,25 +112,31 @@ function Header() {
       {/* MOBILE DROPDOWN NAV */}
       {open && (
         <div
-          className="
+          className={`
             absolute top-20 left-0 w-full bg-mine-shaft-900 
-            border-t border-mine-shaft-800
-            flex flex-col gap-5 py-6 px-6 lg:hidden sm:hidden
-            animate-slide-down
-          "
+            border-t border-mine-shaft-800 flex flex-col gap-5 
+            py-6 px-6 lg:hidden sm:hidden
+            ${animState === "closing" ? "animate-slide-up" : "animate-slide-down"}
+          `}
         >
-          <Navlinks mobile />
+          <Navlinks mobile onClickItem={closeMenu} />
 
           {!loggedIn && (
-            <div className="flex flex-col gap-3 mt-4">
+            <div className="flex flex-col gap-3 mt-4 animate-slide-left">
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  closeMenu();
+                  navigate("/login");
+                }}
                 className="px-4 py-2 bg-bright-sun-300 text-black rounded-md font-semibold"
               >
                 Login
               </button>
               <button
-                onClick={() => navigate("/signup")}
+                onClick={() => {
+                  closeMenu();
+                  navigate("/signup");
+                }}
                 className="px-4 py-2 border border-bright-sun-300 text-bright-sun-300 rounded-md"
               >
                 Sign Up
@@ -128,16 +147,22 @@ function Header() {
           {loggedIn && (
             <div className="flex flex-col gap-4 mt-6">
               <button
-                onClick={() => navigate("/profile")}
-                className="flex items-center gap-3 text-bright-sun-300"
+                onClick={() => {
+                  closeMenu();
+                  navigate("/profile");
+                }}
+                className="flex items-center gap-3 text-bright-sun-300 animate-slide-left"
               >
                 <Avatar src={avtimg} />
                 <span>{user?.name}</span>
               </button>
 
               <button
-                className="flex items-center gap-3 text-red-400"
-                onClick={handleLogout}
+                className="flex items-center gap-3 text-red-400 animate-slide-left"
+                onClick={() => {
+                  closeMenu();
+                  handleLogout();
+                }}
               >
                 <IconLogout /> Logout
               </button>
@@ -145,6 +170,37 @@ function Header() {
           )}
         </div>
       )}
+
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        @keyframes slideLeft {
+          from { opacity: 1; transform: translateX(0); }
+          to { opacity: 0; transform: translateX(-20px); }
+        }
+
+        .animate-slide-down {
+          animation: slideDown 0.35s ease-out forwards;
+        }
+
+        .animate-slide-up {
+          animation: slideUp 0.25s ease-in forwards;
+        }
+
+        .animate-slide-left {
+          animation: slideLeft 0.25s ease-in forwards;
+        }
+      `}</style>
+
     </header>
   );
 }
