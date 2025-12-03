@@ -23,8 +23,6 @@ function Jobs() {
     } catch (error) {
       console.log(error);
     }
-
-    // small smooth delay
     setTimeout(() => setLoading(false), 700);
   }
 
@@ -35,13 +33,9 @@ function Jobs() {
     if (option === "Most Recent") {
       sorted.sort((a, b) => a.postedDaysAgo - b.postedDaysAgo);
     } else if (option === "Salary (Low to High)") {
-      sorted.sort(
-        (a, b) => parseInt(a.packageAmount) - parseInt(b.packageAmount)
-      );
+      sorted.sort((a, b) => parseInt(a.packageAmount) - parseInt(b.packageAmount));
     } else if (option === "Salary (High to Low)") {
-      sorted.sort(
-        (a, b) => parseInt(b.packageAmount) - parseInt(a.packageAmount)
-      );
+      sorted.sort((a, b) => parseInt(b.packageAmount) - parseInt(a.packageAmount));
     } else if (option === "Relevance") {
       sorted = [...allJobsRef.current];
     }
@@ -50,17 +44,34 @@ function Jobs() {
   }
 
   return (
-    <div className="p-5">
+    <div className="px-4 sm:px-6 md:px-10 lg:px-16 py-6">
 
-      <div className="flex justify-between mt-4">
-        <div className="text-2xl font-semibold">Recommended Jobs</div>
+      {/* TOP BAR */}
+      <div className="
+        flex flex-col sm:flex-row 
+        justify-between sm:items-center 
+        gap-3 sm:gap-0 mt-3
+      ">
+        <h1 className="text-xl sm:text-2xl font-semibold text-white">
+          Recommended Jobs
+        </h1>
+
         <Sort onSortChange={handleSort} />
       </div>
 
-      {/* JOB LIST */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* JOB LIST GRID */}
+      <div
+        className="
+          mt-6 
+          grid grid-cols-1 
+          sm:grid-cols-2 
+          lg:grid-cols-3 
+          xl:grid-cols-4
+          gap-5 sm:gap-6 lg:gap-7
+        "
+      >
         {loading ? (
-          <div className="w-full h-[300px] flex justify-center items-center col-span-3">
+          <div className="w-full col-span-4 flex justify-center py-16">
             <Loader />
           </div>
         ) : (
@@ -68,14 +79,13 @@ function Jobs() {
             <div
               key={job.id}
               className="fade-in"
-              style={{ animationDelay: `${i * 80}ms` }} // stagger cards
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               <Jobcard data={job} />
             </div>
           ))
         )}
       </div>
-
     </div>
   );
 }

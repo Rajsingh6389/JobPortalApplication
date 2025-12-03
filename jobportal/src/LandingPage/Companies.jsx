@@ -1,24 +1,39 @@
-import React from 'react'
+import React from "react";
 import Marquee from "react-fast-marquee";
-import { companies } from '../Data/Data';
-
+import { companies } from "../Data/Data";
 
 function Companies() {
-    return (
-        <div className='mt-10 pb-5'>
-            <div className='text-4xl mb-10 text-center font-semibold text-mine-shaft-100 [&>span]:text-bright-sun-400'>Trusted By 1000+ <span>Companies</span></div>
-            <Marquee pauseOnHover={true}>
-                {
-                    companies.map((company,index)=>(
-                        <div key={index} className='flex items-center gap-2 cursor-pointer mx-8 px-2 py-1 [&>span]:text-mine-shaft-100 hover:border rounded-lg p-10'>
-                            <img src={`Companies/${company}.png`} className='h-16' alt={company} />
-                        </div>
-                    ))
-                }
-                
-            </Marquee>
-        </div>
-    )
+  return (
+    <div className="mt-16 pb-10 px-4 sm:px-6 md:px-10">
+      {/* HEADER */}
+      <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-semibold text-mine-shaft-100 mb-10">
+        Trusted by <span className="text-bright-sun-400">1000+ Companies</span>
+      </h2>
+
+      {/* MARQUEE */}
+      <Marquee pauseOnHover={true} speed={50} gradient={false}>
+        {companies.map((company, index) => (
+          <div
+            key={index}
+            className="
+              flex justify-center items-center
+              mx-6 sm:mx-10 
+              transition-all duration-300
+              hover:scale-[1.08]
+              hover:drop-shadow-[0_0_10px_rgba(255,204,0,0.4)]
+            "
+          >
+            <img
+              src={`Companies/${company}.png`}
+              className="h-10 sm:h-12 md:h-16 object-contain opacity-90 hover:opacity-100 transition"
+              alt={company}
+              onError={(e) => (e.target.src = "/Companies/default.png")}
+            />
+          </div>
+        ))}
+      </Marquee>
+    </div>
+  );
 }
 
-export default Companies
+export default Companies;

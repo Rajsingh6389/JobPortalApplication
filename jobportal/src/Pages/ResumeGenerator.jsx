@@ -1,216 +1,225 @@
 import React, { useEffect, useState } from "react";
-import { generateResume, checkPaid, downloadPdf, createRazorpayOrder, verifyRazorpayPayment } from "../api/api";
+import {
+  generateResume,
+  checkPaid,
+  downloadPdf,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "../api/api";
 import PaymentModal from "./PaymentModal";
 import ResumeLoader from "./ResumeLoader";
 
 export default function ResumeGenerator() {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user?.id;
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
-    const [prompt, setPrompt] = useState("Java fresher with Spring Boot and React project experience.");
-    const [loading, setLoading] = useState(false);
-    const [resumeText, setResumeText] = useState("");
-    const [resumeId, setResumeId] = useState(null);
-    const [paid, setPaid] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [payLoading, setPayLoading] = useState(false);
-    const [error, setError] = useState("");
+  const [prompt, setPrompt] = useState(
+    "Java fresher with Spring Boot and React project experience."
+  );
+  const [loading, setLoading] = useState(false);
+  const [resumeText, setResumeText] = useState("");
+  const [resumeId, setResumeId] = useState(null);
+  const [paid, setPaid] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    // Fetch Payment Status
-    useEffect(() => {
-        if (userId) {
-            checkPaid(userId).then(setPaid).catch(() => setPaid(false));
-        }
-    }, [userId]);
+  useEffect(() => {
+    if (userId) {
+      checkPaid(userId).then(setPaid).catch(() => setPaid(false));
+    }
+  }, [userId]);
 
-    // Generate Resume
-    async function onGenerate(e) {
-        e.preventDefault();
+  /* ---------------------------------
+        GENERATE RESUME
+  ----------------------------------*/
+  async function onGenerate(e) {
+    e.preventDefault();
 
-        if (!userId) {
-            setError("Login required.");
-            return;
-        }
+    if (!userId) return setError("Please login first.");
 
-        setError("");
-        setLoading(true);
-        setResumeText("");
-        setResumeId(null);
+    setError("");
+    setLoading(true);
+    setResumeText("");
+    setResumeId(null);
 
-        try {
-            const data = await generateResume({ userId, prompt });
-            setResumeText(data.resumeText || "");
-            setResumeId(data.resumeId || null);
-        } catch {
-            setError("Failed to generate resume.");
-        } finally {
-            setLoading(false);
-        }
+    try {
+      const data = await generateResume({ userId, prompt });
+      setResumeText(data.resumeText || "");
+      setResumeId(data.resumeId || null);
+    } catch {
+      setError("❌ Failed to generate resume.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ---------------------------------
+        PDF DOWNLOAD
+  ----------------------------------*/
+  async function onDownload() {
+    if (!resumeId) return setError("Generate a resume first.");
+
+    const isPaid = await checkPaid(userId).catch(() => false);
+    setPaid(isPaid);
+
+    if (!isPaid) {
+      setModalOpen(true);
+      return;
     }
 
-    // Download Resume
-    async function onDownload() {
-        if (!resumeId) {
-            setError("Generate a resume first.");
-            return;
-        }
+    try {
+      const blob = await downloadPdf(userId, resumeId);
+      const url = window.URL.createObjectURL(blob);
 
-        const isPaid = await checkPaid(userId).catch(() => false);
-        setPaid(isPaid);
-
-        if (!isPaid) {
-            setModalOpen(true);
-            return;
-        }
-
-        try {
-            const blob = await downloadPdf(userId, resumeId);
-            const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `resume-${resumeId}.pdf`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        } catch {
-            setError("Download failed.");
-        }
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `resume-${resumeId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("❌ Download failed.");
     }
+  }
 
-    // Razorpay Payment Handler
-    async function handlePay() {
-        setPayLoading(true);
-        try {
-            // 1) Create Order (Backend)
-            const res = await createRazorpayOrder({ userId, amount: 99 });
-            const { orderId, amount, currency, keyId } = res.data;
+  /* ---------------------------------
+        RAZORPAY PAYMENT HANDLER
+  ----------------------------------*/
+  async function handlePay() {
+    setPayLoading(true);
+    try {
+      const res = await createRazorpayOrder({ userId, amount: 99 });
+      const { orderId, amount, currency, keyId } = res.data;
 
-            // 2) Load Razorpay Script
-            await new Promise((resolve, reject) => {
-                if (document.getElementById("rzp-script")) return resolve();
-                const script = document.createElement("script");
-                script.id = "rzp-script";
-                script.src = "https://checkout.razorpay.com/v1/checkout.js";
-                script.onload = resolve;
-                script.onerror = reject;
-                document.body.appendChild(script);
-            });
+      // Load Razorpay script
+      await new Promise((resolve, reject) => {
+        if (document.getElementById("rzp-script")) return resolve();
+        const script = document.createElement("script");
+        script.id = "rzp-script";
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
 
-            // 3) Open Razorpay Checkout
-            const options = {
-                key: keyId,
-                amount: amount,
-                currency: currency,
-                name: "Resume Generator Premium",
-                description: "Unlock Resume Download",
-                order_id: orderId,
-                prefill: {
-                    name: user?.name,
-                    email: user?.email,
-                },
-                theme: { color: "#4f46e5" },
-                handler: async function (response) {
-                    // 4) Verify Payment Signature (Backend)
-                    const verify = await verifyRazorpayPayment({
-                            userId,
-                            orderId: response.razorpay_order_id,
-                            paymentId: response.razorpay_payment_id,
-                            signature: response.razorpay_signature,
-                        });
+      const options = {
+        key: keyId,
+        amount,
+        currency,
+        name: "Resume Generator Premium",
+        description: "Unlock Resume PDF Download",
+        order_id: orderId,
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+        },
+        theme: { color: "#F7C948" },
+        handler: async function (response) {
+          const verify = await verifyRazorpayPayment({
+            userId,
+            orderId: response.razorpay_order_id,
+            paymentId: response.razorpay_payment_id,
+            signature: response.razorpay_signature,
+          });
 
+          if (verify.data.success) {
+            setPaid(true);
+            setModalOpen(false);
+            onDownload();
+          } else {
+            setError("❌ Payment verification failed.");
+          }
+        },
+      };
 
-
-                    if (verify.data.success) {
-                        setPaid(true);
-                        setModalOpen(false);
-                        await onDownload();
-                    } else {
-                        setError("Payment verification failed.");
-                    }
-                },
-            };
-
-            const paymentObject = new window.Razorpay(options);
-            paymentObject.open();
-
-        } catch (err) {
-            console.error(err);
-            setError("Payment failed.");
-        } finally {
-            setPayLoading(false);
-        }
+      new window.Razorpay(options).open();
+    } catch {
+      setError("❌ Payment failed.");
+    } finally {
+      setPayLoading(false);
     }
+  }
 
-    // Show loader while generating
-    if (loading) return <ResumeLoader />;
+  /* ---------------------------------
+        LOADING SCREEN
+  ----------------------------------*/
+  if (loading) return <ResumeLoader />;
 
-    if (!userId) {
-        return (
-            <div className="bg-bright-sun-200 p-6 rounded shadow">
-                <p className="text-red-600">Please login to use Resume Generator.</p>
-            </div>
-        );
-    }
-
+  if (!userId) {
     return (
-        <div className="bg-mine-shaft-800 text-mine-shaft-50 shadow rounded p-6">
-
-            {/* Prompt Input */}
-            <form onSubmit={onGenerate}>
-                <label className="block py-2 text-md font-[poppins] text-mine-shaft-200">
-                    Enter prompt (what you want on the resume)
-                </label>
-
-                <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    rows={4}
-                    className="mt-2 w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                ></textarea>
-
-                <div className="flex gap-3 mt-4">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                    >
-                        Generate Resume
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={onDownload}
-                        disabled={!resumeText}
-                        className="px-4 py-2 border rounded"
-                    >
-                        {paid ? "Download PDF" : "Pay & Download (₹99)"}
-                    </button>
-                </div>
-
-                {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
-            </form>
-
-            {/* Resume Preview */}
-            {resumeText && (
-                <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-2">Preview</h3>
-
-                    <div
-                        className="border rounded p-6 bg-white text-gray-800 shadow-sm leading-relaxed"
-                        style={{ whiteSpace: "pre-line" }}
-                    >
-                        {resumeText}
-                    </div>
-                </div>
-            )}
-
-            {/* Payment Modal */}
-            <PaymentModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                onPay={handlePay}
-                loading={payLoading}
-            />
-        </div>
+      <div className="bg-red-200 p-6 rounded text-red-800 font-semibold">
+        Please login to use Resume Generator.
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-mine-shaft-900 text-white p-6 sm:p-10 rounded-2xl shadow-xl border border-mine-shaft-700 max-w-4xl mx-auto">
+
+      {/* HEADER */}
+      <h1 className="text-3xl sm:text-4xl font-bold text-bright-sun-300 mb-6 text-center">
+        AI Resume Generator ⚡
+      </h1>
+
+      {/* PROMPT INPUT */}
+      <form onSubmit={onGenerate} className="space-y-3">
+        <label className="text-sm text-mine-shaft-300">Resume Prompt</label>
+
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          rows={4}
+          className="w-full p-4 rounded-xl bg-mine-shaft-800 border border-mine-shaft-700 focus:border-bright-sun-300 outline-none transition text-mine-shaft-100"
+          placeholder="Write details about your experience, skills, project work..."
+        ></textarea>
+
+        {/* BUTTONS */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+          <button
+            type="submit"
+            className="px-5 py-3 bg-bright-sun-300 text-black rounded-lg font-semibold hover:bg-bright-sun-200 transition"
+          >
+            Generate Resume
+          </button>
+
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={!resumeText}
+            className="px-5 py-3 border border-bright-sun-300 text-bright-sun-200 rounded-lg hover:bg-bright-sun-300 hover:text-black transition disabled:opacity-40"
+          >
+            {paid ? "Download PDF" : "Pay ₹99 & Download"}
+          </button>
+        </div>
+      </form>
+
+      {/* ERROR */}
+      {error && (
+        <p className="mt-4 text-red-400 text-sm font-semibold">{error}</p>
+      )}
+
+      {/* RESUME PREVIEW */}
+      {resumeText && (
+        <div className="mt-8">
+          <h3 className="text-2xl font-semibold text-bright-sun-200 mb-3">
+            Resume Preview
+          </h3>
+
+          <div
+            className="bg-white text-gray-900 p-6 rounded-xl shadow-lg leading-relaxed whitespace-pre-line"
+          >
+            {resumeText}
+          </div>
+        </div>
+      )}
+
+      {/* PAYMENT POPUP */}
+      <PaymentModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onPay={handlePay}
+        loading={payLoading}
+      />
+    </div>
+  );
 }

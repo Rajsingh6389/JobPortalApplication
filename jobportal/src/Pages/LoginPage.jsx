@@ -1,143 +1,205 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../redux/authSlice";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/authSlice";
+import {
+  IconUser,
+  IconMail,
+  IconBriefcase,
+  IconLogout,
+  IconEdit,
+  IconMapPin,
+  IconCurrencyRupee,
+  IconIdBadge,
+  IconBrandLinkedin,
+  IconBrandGithub,
+} from "@tabler/icons-react";
+import avtimg from "../assets/avatar-3.png";
 import { useNavigate } from "react-router-dom";
-import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import { getProfileApi } from "../api/profileApi";
+import EditProfileModal from "./EditProfileModal";
 import Loader from "../Findjobs/Loader";
-import ButtonLoader from "../Loader/ButtonLoader";
+import { Badge, Divider } from "@mantine/core";
 
-function LoginPage() {
-    const [form, setForm] = useState({ email: "", password: "" });
-    const [showPassword, setShowPassword] = useState(false);
-    const [redirecting, setRedirecting] = useState(false);
+function ProfilePage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    const dispatch = useDispatch();
-    const { loading, error } = useSelector((state) => state.auth);
-    const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("FORM SENT TO BACKEND:", form);
+  // Fetch profile ---------------------
+  const fetchProfile = async () => {
+    try {
+      const res = await getProfileApi();
+      setProfile(res.data);
+    } catch (err) {
+      console.log(err);
+      navigate("/login");
+    }
+    setLoading(false);
+  };
 
-        dispatch(loginUser(form)).then((res) => {
-            if (res.meta.requestStatus === "fulfilled") {
-                setRedirecting(true);
+  useEffect(() => {
+    if (!localStorage.getItem("token")) navigate("/login");
+    fetchProfile();
+  }, []);
 
-                setTimeout(() => {
-                    navigate("/find-jobs");
-                }, 1500); // show loader for 1 second
-            }
-        });
-    };
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
 
+  if (loading)
     return (
-        <div className="min-h-screen flex justify-center items-center bg-mine-shaft-950 text-white">
-
-            <form
-                onSubmit={handleSubmit}
-                className="
-          bg-mine-shaft-900 mb-20 p-10 rounded-2xl w-[420px] border border-mine-shaft-800 
-          shadow-xl transform transition-all duration-500 
-          hover:scale-[1.03] hover:shadow-2xl hover:shadow-bright-sun-300/20
-          animate-[fadeInUp_0.8s_ease-out]
-        "
-            >
-                <h2 className="text-3xl font-bold mb-6 text-bright-sun-300 text-center">
-                    Login
-                </h2>
-
-                {/* EMAIL */}
-                <div className="mb-4">
-                    <label className="text-sm text-mine-shaft-300">Email</label>
-                    <input
-                        type="email"
-                        required
-                        className="
-              w-full p-3 bg-mine-shaft-800 rounded-lg 
-              border border-mine-shaft-700 mt-1 
-              transition-all duration-300 
-              focus:ring-2 focus:ring-bright-sun-300 focus:border-bright-sun-300
-            "
-                        placeholder="Enter email"
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    />
-                </div>
-
-                {/* PASSWORD */}
-                <div className="mb-4 relative">
-                    <label className="text-sm text-mine-shaft-300">Password</label>
-
-                    <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        className="
-              w-full p-3 bg-mine-shaft-800 rounded-lg 
-              border border-mine-shaft-700 mt-1 
-              transition-all duration-300
-              focus:ring-2 focus:ring-bright-sun-300 focus:border-bright-sun-300
-            "
-                        placeholder="Enter password"
-                        onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    />
-
-                    <div
-                        className="
-              absolute right-3 top-10 cursor-pointer 
-              text-mine-shaft-400 hover:text-bright-sun-300
-              transition-all
-            "
-                        onClick={() => setShowPassword(!showPassword)}
-                    >
-                        {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
-                    </div>
-                </div>
-
-                {/* ERROR */}
-                {error && (
-                    <p className="text-red-400 text-sm mb-3 text-center animate-pulse">
-                        {error}
-                    </p>
-                )}
-
-                {/* LOGIN BUTTON + REDIRECTING LOADER */}
-                <button
-                    type="submit"
-                    className="
-    w-full bg-bright-sun-300 text-black py-3 rounded-lg font-semibold 
-    transition-all duration-300 
-    hover:bg-bright-sun-200 hover:scale-[1.03]
-    active:scale-95
-    shadow-md hover:shadow-bright-sun-400/30
-    flex justify-center items-center
-  "
-                    disabled={loading || redirecting}
-                >
-                    {redirecting ? (
-                        <div className="scale-50">
-                            <ButtonLoader />
-                        </div>
-                    ) : loading ? (
-                        "Logging in..."
-                    ) : (
-                        "Login"
-                    )}
-                </button>
-
-                <p className="mt-4 text-sm text-center">
-                    Don't have an account?{" "}
-                    <span
-                        onClick={() => navigate("/signup")}
-                        className="
-              text-bright-sun-300 cursor-pointer 
-              hover:text-bright-sun-200 transition-all
-            "
-                    >
-                        Sign Up
-                    </span>
-                </p>
-            </form>
-        </div>
+      <div className="h-screen flex justify-center items-center bg-mine-shaft-950">
+        <Loader />
+      </div>
     );
+
+  if (!profile)
+    return (
+      <div className="h-screen flex justify-center items-center text-red-400">
+        Failed to load profile...
+      </div>
+    );
+
+  return (
+    <div className="min-h-screen bg-mine-shaft-950 text-white p-10 flex justify-center">
+
+      {/* GRID LAYOUT */}
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-3 gap-10 animate-[fadeIn_0.6s_ease-out]">
+
+        {/* ---------------- LEFT SIDEBAR ---------------- */}
+        <div className="bg-mine-shaft-900/80 backdrop-blur-xl p-7 rounded-3xl shadow-xl border border-mine-shaft-800">
+
+          <div className="flex flex-col items-center">
+            {/* Profile Image */}
+            <img
+              src={avtimg}
+              alt="profile"
+              className="w-32 h-32 rounded-full border-4 border-bright-sun-300 shadow-xl"
+            />
+
+            {/* Name */}
+            <h1 className="text-3xl font-bold text-bright-sun-300 mt-4">
+              {profile.name}
+            </h1>
+
+            {/* Email */}
+            <p className="flex items-center gap-2 text-mine-shaft-300 mt-2">
+              <IconMail size={18} /> {profile.email}
+            </p>
+
+            {/* Account Type */}
+            <Badge
+              color={profile.userType === "ADMIN" ? "red" : "yellow"}
+              size="lg"
+              className="mt-4"
+            >
+              {profile.userType}
+            </Badge>
+
+            {/* Edit Button */}
+            <button
+              onClick={() => setEditing(true)}
+              className="mt-5 bg-bright-sun-300 px-4 py-2 rounded-xl text-black 
+              font-semibold flex items-center gap-2 hover:bg-bright-sun-200 transition"
+            >
+              <IconEdit size={18} /> Edit Profile
+            </button>
+          </div>
+
+          <Divider className="my-6" />
+
+          {/* Social Icons */}
+          <div className="flex justify-center gap-5 text-bright-sun-300 mt-4">
+            <IconBrandLinkedin size={32} className="cursor-pointer hover:scale-110 transition" />
+            <IconBrandGithub size={32} className="cursor-pointer hover:scale-110 transition" />
+          </div>
+
+        </div>
+
+        {/* ---------------- RIGHT CONTENT PANEL ---------------- */}
+        <div className="lg:col-span-2 space-y-8">
+
+          {/* About */}
+          <div className="bg-mine-shaft-900/60 p-7 rounded-xl border border-mine-shaft-700 shadow hover:shadow-xl transition">
+            <h2 className="text-2xl font-semibold text-bright-sun-200 flex items-center gap-2">
+              <IconUser /> About Me
+            </h2>
+            <p className="text-mine-shaft-300 mt-2 text-lg">
+              {profile.about || "Not added"}
+            </p>
+          </div>
+
+          {/* Job Preferences */}
+          <div className="bg-mine-shaft-900/60 p-7 rounded-xl border border-mine-shaft-700 shadow hover:shadow-xl transition">
+            <h2 className="text-2xl font-semibold text-bright-sun-200 flex items-center gap-2">
+              <IconBriefcase /> Job Preferences
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4 text-mine-shaft-300 text-lg">
+              <p className="flex items-center gap-2">
+                <IconIdBadge size={18} className="text-bright-sun-300" />
+                <b>Role:</b> {profile.role || "Not added"}
+              </p>
+
+              <p className="flex items-center gap-2">
+                <IconMapPin size={18} className="text-bright-sun-300" />
+                <b>Location:</b> {profile.location || "Not added"}
+              </p>
+
+              <p className="flex items-center gap-2">
+                <IconCurrencyRupee size={18} className="text-bright-sun-300" />
+                <b>Expected Salary:</b> {profile.expectedSalary || "Not added"}
+              </p>
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div className="bg-mine-shaft-900/60 p-7 rounded-xl border border-mine-shaft-700 shadow hover:shadow-xl transition">
+            <h2 className="text-2xl font-semibold text-bright-sun-200">
+              Skills
+            </h2>
+
+            <div className="flex flex-wrap gap-3 mt-4">
+              {(profile.skills?.split(",") || []).map((skill, i) => (
+                <Badge
+                  key={i}
+                  color="yellow"
+                  size="lg"
+                  className="bg-mine-shaft-800 border border-bright-sun-300 text-bright-sun-200 px-4 py-2"
+                >
+                  {skill.trim()}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Logout */}
+          <div className="flex justify-end">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-400 
+              text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg"
+            >
+              <IconLogout size={18} /> Logout
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {editing && (
+        <EditProfileModal
+          user={profile}
+          close={() => setEditing(false)}
+          refresh={fetchProfile}
+        />
+      )}
+    </div>
+  );
 }
 
-export default LoginPage;
+export default ProfilePage;
