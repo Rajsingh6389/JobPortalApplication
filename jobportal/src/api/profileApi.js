@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "jobportalapplication-production.up.railway.app/api",
+  baseURL: "https://jobportalapplication-production.up.railway.app/api",
 });
 
 // Add TOKEN

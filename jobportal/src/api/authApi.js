@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = "jobportalapplication-production.up.railway.app/api/auth";
-const BASE_URL2 = "jobportalapplication-production.up.railway.app/api";
+const BASE_URL = "https://jobportalapplication-production.up.railway.app/api/auth";
+const BASE_URL2 = "https://jobportalapplication-production.up.railway.app/api";
 
 // Axios instances
 const api = axios.create({
