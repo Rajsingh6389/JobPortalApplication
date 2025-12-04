@@ -1,7 +1,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Navlinks({ mobile = false }) {
+function Navlinks({ mobile = false, onLinkClick }) {
+  const location = useLocation();
+
   const links = [
     { name: "Find Jobs", url: "/find-jobs" },
     { name: "Find Talent", url: "/find-talent" },
@@ -11,13 +13,11 @@ function Navlinks({ mobile = false }) {
     { name: "AI Resume", url: "/resume-generator" },
   ];
 
-  const location = useLocation();
-
   return (
     <nav
       className={
         mobile
-          ? "flex flex-col gap-4 text-gray-300"
+          ? "flex flex-col gap-5 text-gray-200 p-4"
           : "flex gap-6 items-center text-mine-shaft-300"
       }
     >
@@ -28,19 +28,19 @@ function Navlinks({ mobile = false }) {
           <Link
             key={link.url}
             to={link.url}
-            className={`
-              relative font-medium transition-all 
+            onClick={() => {
+              if (mobile && onLinkClick) onLinkClick(); // close dropdown
+            }}
+            className={`group relative font-medium transition-all 
               ${mobile ? "text-lg" : "text-sm"}
               ${isActive ? "text-bright-sun-300" : "hover:text-bright-sun-300"}
             `}
           >
-            {/* TEXT */}
             {link.name}
 
-            {/* UNDERLINE EFFECT */}
+            {/* Underline animation */}
             <span
-              className={`
-                absolute left-0 bottom-[-4px] h-[2px] bg-bright-sun-300 rounded-full transition-all 
+              className={`absolute left-0 bottom-[-4px] h-[2px] bg-bright-sun-300 rounded-full transition-all
                 ${isActive ? "w-full" : "w-0 group-hover:w-full"}
               `}
             ></span>
