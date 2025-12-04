@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -37,18 +36,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
 
+                        // Auth APIs
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/all").permitAll()
+
+                        // Resume API (public)
                         .requestMatchers("/api/resume/**").permitAll()
+
+                        // Payment API (public)
                         .requestMatchers("/api/payment/**").permitAll()
 
-                        // Public jobs
-                        .requestMatchers("/jobportal/jobs", "/jobportal/jobs/**", "/jobportal/jobs/apply")
-                        .permitAll()
+                        // Jobs (public)
+                        .requestMatchers("/jobportal/jobs", "/jobportal/jobs/**", "/jobportal/jobs/apply").permitAll()
 
                         // Admin jobs
                         .requestMatchers("/jobportal/jobs/admin/**").hasRole("ADMIN")
 
-                        // Protected profile routes
+                        // Profile (protected)
                         .requestMatchers("/api/profile/**").authenticated()
 
                         .anyRequest().permitAll()
@@ -61,16 +64,20 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ⭐ CORS config for Vercel + Railway
+    // ⭐ FIXED CORS CONFIG FOR LOCAL + VERCEL + RAILWAY
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of(
+
+        // 🔥 FIX: use allowedOriginPatterns instead of allowedOrigins
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
                 "http://localhost:5173",
-                "https://job-portal-application-7yhh.vercel.app",
-                "https://jobportalapplication-production.up.railway.app"
+                "https://*.vercel.app",
+                "https://jobportalapplication-production.up.railway.app",
+                "*"   // ← optional for testing; remove in production if needed
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

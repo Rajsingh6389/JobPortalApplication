@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Navlinks({ mobile = false, onClickItem }) {
+function Navlinks({ mobile = false, onClickItem, loggedIn = false }) {
   const location = useLocation();
 
   const links = [
@@ -12,6 +12,14 @@ function Navlinks({ mobile = false, onClickItem }) {
     { name: "About Us", url: "/about" },
     { name: "AI Resume", url: "/resume-generator" },
   ];
+
+  // Add Login + Signup ONLY when NOT logged in
+  if (!loggedIn) {
+    links.push(
+      { name: "Login", url: "/login" },
+      { name: "Sign Up", url: "/signup" }
+    );
+  }
 
   return (
     <nav
@@ -29,15 +37,16 @@ function Navlinks({ mobile = false, onClickItem }) {
             key={link.url}
             to={link.url}
             onClick={() => {
-              if (mobile && onClickItem) onClickItem(); // CLOSE MENU
+              if (mobile && onClickItem) onClickItem(); // CLOSE MOBILE MENU
             }}
-            className={`group relative font-medium transition-all 
+            className={`group relative font-medium transition-all
               ${mobile ? "text-lg" : "text-sm"}
               ${isActive ? "text-bright-sun-300" : "hover:text-bright-sun-300"}
             `}
           >
             {link.name}
 
+            {/* Underline Animation */}
             <span
               className={`absolute left-0 bottom-[-4px] h-[2px] bg-bright-sun-300 rounded-full transition-all
                 ${isActive ? "w-full" : "w-0 group-hover:w-full"}
