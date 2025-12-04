@@ -77,12 +77,13 @@ public class SecurityConfig {
 
         // 🔥 FIX: use allowedOriginPatterns instead of allowedOrigins
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",
-                "http://localhost:5173",
-                "https://*.vercel.app",
-                "https://jobportalapplication-production.up.railway.app",
-                "*"   // ← optional for testing; remove in production if needed
-        ));
+        "http://localhost:*",
+        "http://localhost:5173",
+        "https://*.netlify.app",
+        "https://sparkling-medovik-f868d7.netlify.app",
+        "https://jobportalapplication-production.up.railway.app"
+));
+
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
