@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Navlinks({ mobile = false, onLinkClick }) {
+function Navlinks({ mobile = false, onClickItem }) {
   const location = useLocation();
 
   const links = [
@@ -17,7 +17,7 @@ function Navlinks({ mobile = false, onLinkClick }) {
     <nav
       className={
         mobile
-          ? "flex flex-col gap-5 text-gray-200 p-4"
+          ? "flex flex-col gap-5 text-gray-200"
           : "flex gap-6 items-center text-mine-shaft-300"
       }
     >
@@ -29,7 +29,7 @@ function Navlinks({ mobile = false, onLinkClick }) {
             key={link.url}
             to={link.url}
             onClick={() => {
-              if (mobile && onLinkClick) onLinkClick(); // close dropdown
+              if (mobile && onClickItem) onClickItem(); // CLOSE MENU
             }}
             className={`group relative font-medium transition-all 
               ${mobile ? "text-lg" : "text-sm"}
@@ -38,7 +38,6 @@ function Navlinks({ mobile = false, onLinkClick }) {
           >
             {link.name}
 
-            {/* Underline animation */}
             <span
               className={`absolute left-0 bottom-[-4px] h-[2px] bg-bright-sun-300 rounded-full transition-all
                 ${isActive ? "w-full" : "w-0 group-hover:w-full"}
